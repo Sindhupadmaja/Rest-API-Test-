@@ -189,15 +189,3 @@ The CI pipeline:
 5. Executes Newman.
 6. Fails the workflow if API tests fail.
 
-## 10. QA Progression
-
-This is intentionally more advanced than the 2023 project:
-
-**2023:** Manual requirements-based testing  
-→ **2024:** API + authentication + schema + SQL + repeatable test execution  
-→ **2025:** Banking transaction QA + concurrency + audit/data integrity  
-→ **2026:** End-to-end release quality + risk management + release sign-off
-
-## 11. Portfolio Note
-
-This is a self-contained portfolio project created to demonstrate the QA capabilities represented by the 2024 resume project entry. It is not a claim that the API belongs to an external organization.
