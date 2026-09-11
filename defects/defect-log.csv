@@ -1,0 +1,4 @@
+Defect ID,Summary,Endpoint,Severity,Priority,Steps to Reproduce,Expected Result,Observed/Targeted Behavior,Status
+DEF-API-001,No-results search contract is not explicit,GET /api/books/search,Minor,Medium,"Authenticate; search for NoSuchBook","Response should clearly communicate zero results","Initial design required explicit count=0 contract","Resolved
+DEF-API-002,Unavailable book borrow must return conflict,POST /api/books/:id/borrow,Major,High,"Authenticate; borrow already borrowed book","409 Conflict should be returned","API explicitly guards unavailable state","Resolved
+DEF-API-003,Non-borrower return must be rejected,POST /api/books/:id/return,Major,High,"Authenticate as a different user; return another user's book","403 Forbidden should be returned","API checks borrowed_by before update","Resolved

@@ -1,0 +1,15 @@
+{
+  "validUser": {
+    "username": "student",
+    "password": "library123"
+  },
+  "invalidUser": {
+    "username": "student",
+    "password": "wrong-password"
+  },
+  "availableBookId": 1,
+  "borrowedBookId": 2,
+  "missingBookId": 999,
+  "searchTerm": "Hobbit",
+  "unknownSearchTerm": "NoSuchBook"
+}

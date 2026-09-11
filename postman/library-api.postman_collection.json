@@ -1,0 +1,342 @@
+{
+  "info": {
+    "name": "Library Management API - 2024 QA Suite",
+    "_postman_id": "d1b7a4f8-2024-4d01-qa01-000000000001",
+    "description": "Reusable API QA collection covering authentication, schema, negative testing, business rules and state transitions.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/health"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.test('Health status is UP', () => pm.expect(json.status).to.eql('UP'));",
+              "pm.test('Service field exists', () => pm.expect(json).to.have.property('service'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Valid Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\": \"student\", \"password\": \"library123\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.test('Token exists', () => pm.expect(json.token).to.be.a('string'));",
+              "pm.test('User exists', () => pm.expect(json.user).to.have.property('username'));",
+              "pm.environment.set('token', json.token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Invalid Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\": \"student\", \"password\": \"wrong-password\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 401', () => pm.response.to.have.status(401));",
+              "const json = pm.response.json();",
+              "pm.test('Error exists', () => pm.expect(json).to.have.property('error'));",
+              "pm.test('Message exists', () => pm.expect(json).to.have.property('message'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Missing Login Field",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\": \"student\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+              "const json = pm.response.json();",
+              "pm.test('Validation error', () => pm.expect(json.error).to.eql('ValidationError'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Unauthorized Books Request",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/books"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 401', () => pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - List Books",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/books"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.request.headers.add({key: 'Authorization', value: 'Bearer ' + pm.environment.get('token')});",
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.test('Count exists', () => pm.expect(json.count).to.be.a('number'));",
+              "pm.test('Books is array', () => pm.expect(json.books).to.be.an('array'));",
+              "pm.test('Book schema', () => { if (json.books.length) pm.expect(json.books[0]).to.have.all.keys('id','title','author','status'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Search Existing Book",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/books/search?q=Hobbit"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.request.headers.add({key: 'Authorization', value: 'Bearer ' + pm.environment.get('token')});",
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.test('At least one match', () => pm.expect(json.count).to.be.above(0));",
+              "pm.test('Query echoed', () => pm.expect(json.query).to.eql('Hobbit'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Search No Results",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/books/search?q=NoSuchBook"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.request.headers.add({key: 'Authorization', value: 'Bearer ' + pm.environment.get('token')});",
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.test('Count is zero', () => pm.expect(json.count).to.eql(0));",
+              "pm.test('Books is empty array', () => pm.expect(json.books).to.be.an('array').and.have.length(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 - Search Missing Query",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/books/search"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.request.headers.add({key: 'Authorization', value: 'Bearer ' + pm.environment.get('token')});",
+              "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+              "const json = pm.response.json();",
+              "pm.test('Validation error', () => pm.expect(json.error).to.eql('ValidationError'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Borrow Available Book",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/api/books/1/borrow"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.request.headers.add({key: 'Authorization', value: 'Bearer ' + pm.environment.get('token')});",
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.test('Borrow succeeded', () => pm.expect(json.message).to.eql('Book borrowed successfully'));",
+              "pm.test('Status became BORROWED', () => pm.expect(json.book.status).to.eql('BORROWED'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 - Borrow Unavailable Book",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/api/books/2/borrow"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.request.headers.add({key: 'Authorization', value: 'Bearer ' + pm.environment.get('token')});",
+              "pm.test('Status is 409', () => pm.response.to.have.status(409));",
+              "const json = pm.response.json();",
+              "pm.test('Conflict error', () => pm.expect(json.error).to.eql('Conflict'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 - Borrow Missing Book",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/api/books/999/borrow"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.request.headers.add({key: 'Authorization', value: 'Bearer ' + pm.environment.get('token')});",
+              "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 - Return Borrowed Book",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/api/books/1/return"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.request.headers.add({key: 'Authorization', value: 'Bearer ' + pm.environment.get('token')});",
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.test('Return succeeded', () => pm.expect(json.message).to.eql('Book returned successfully'));",
+              "pm.test('Status became AVAILABLE', () => pm.expect(json.book.status).to.eql('AVAILABLE'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 - Return Already Available Book",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/api/books/1/return"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.request.headers.add({key: 'Authorization', value: 'Bearer ' + pm.environment.get('token')});",
+              "pm.test('Status is 409', () => pm.response.to.have.status(409));",
+              "const json = pm.response.json();",
+              "pm.test('Conflict error', () => pm.expect(json.error).to.eql('Conflict'));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

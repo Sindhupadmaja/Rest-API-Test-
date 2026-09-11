@@ -1,0 +1,17 @@
+{
+  "name": "rest-api-test-project-2024",
+  "version": "1.0.0",
+  "description": "Intermediate REST API QA portfolio project",
+  "main": "api/server.js",
+  "scripts": {
+    "start": "node api/server.js",
+    "test": "node newman/run-tests.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "newman": "^6.2.1"
+  }
+}
